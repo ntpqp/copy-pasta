@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Display Page</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const socket = io();
+      const messageElement = document.getElementById('message');
+      const timerElement = document.getElementById('timer');
+      const copyButton = document.getElementById('copyButton');
+      const feedback = document.getElementById('feedback');
+      let messageTimestamp = null;
+
+      socket.on('messageUpdate', (data) => {
+        messageElement.textContent = data.message;
+        messageTimestamp = data.timestamp;
+        updateTimer();
+      });
+
+      copyButton.addEventListener('click', () => {
+        navigator.clipboard.writeText(messageElement.textContent)
+          .then(() => {
+            feedback.textContent = 'Text copied!';
+            setTimeout(() => feedback.textContent = '', 2000); // Clear feedback after 2 seconds
+          })
+          .catch(err => {
+            console.error('Failed to copy text: ', err);
+          });
+      });
+
+      function updateTimer() {
+        if (messageTimestamp) {
+          const now = Date.now();
+          const secondsAgo = Math.floor((now - messageTimestamp) / 1000);
+          timerElement.textContent = `${secondsAgo} seconds ago`;
+          setTimeout(updateTimer, 1000); // Update every second
+        }
+      }
+    });
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    #message {
+      font-size: 1.2rem;
+      color: #555;
+      margin: 0;
+      padding: 0 15px;
+      word-wrap: break-word;
+    }
+
+    #timer {
+      font-size: 1rem;
+      color: #888;
+      margin: 10px 0;
+    }
+
+    #copyButton {
+      font-size: 1.1rem;
+      color: #fff;
+      background-color: #007bff;
+      border: none;
+      border-radius: 5px;
+      padding: 15px 30px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    #copyButton:hover {
+      background-color: #0056b3;
+    }
+
+    #copyButton:active {
+      transform: scale(0.98);
+    }
+
+    #feedback {
+      font-size: 1rem;
+      color: #28a745;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <p id="message">Waiting for message...</p>
+  <p id="timer">-</p>
+  <button id="copyButton">Copy</button>
+  <p id="feedback"></p>
+</body>
+</html>
